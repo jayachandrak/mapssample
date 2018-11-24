@@ -31,6 +31,7 @@
         android:layout_centerVertical="true"
         android:hint="Search Location"
         android:imeOptions="actionSearch"
+        android:inputType="textAutoComplete|textAutoCorrect"
         android:id="@+id/input_search"
         android:textSize="15sp"/>
 
