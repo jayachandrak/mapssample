@@ -14,6 +14,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -66,6 +67,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     //vars
     private Boolean mLocationPermissionsGranted = false;
     private GoogleMap mMap;
+    private Marker mMarker;
     private FusedLocationProviderClient mFusedLocationProviderClient;
     private PlaceAutocompleteAdapter placeAutocompleteAdapter;
     //widgets used
@@ -221,19 +223,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         Log.d(TAG, "moveCamera: moving the camera to:lat: " + latLng.latitude + ", lng: " + latLng.longitude);
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoom));
 
-        if (!title.equals("My Location")) {
+//        if (!title.equals("My Location")) {
             MarkerOptions options = new MarkerOptions()
                     .position(latLng)
                     .title(title);
-            Marker m= mMap.addMarker(options);
+            mMarker= mMap.addMarker(options);
 
 
             CustomInfoWindowGoogleMap customInfoWindow = new CustomInfoWindowGoogleMap(this);
             mMap.setInfoWindowAdapter(customInfoWindow);
             mMap.setOnInfoWindowClickListener(this);
-            m.showInfoWindow();
+            mMarker.showInfoWindow();
 
-        }
+//        }
         hideSoftKeyboard();
     }
 
@@ -264,7 +266,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 // for ActivityCompat#requestPermissions for more details.
                 return;
             }
-            mMap.setMyLocationEnabled(true);
+//            mMap.setMyLocationEnabled(true);
             init();
         }
     }
@@ -368,6 +370,27 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onInfoWindowClick(Marker marker) {
 
-        Toast.makeText(MapsActivity.this,"Marker Title : "+marker.getTitle(),1000).show();
+        FragmentTransaction fragmentTransaction=getSupportFragmentManager().beginTransaction();
+
+        PlaceDetailFragment placeDetailFragment=PlaceDetailFragment.newInstance(marker.getTitle());
+
+        fragmentTransaction.replace(R.id.fragment_frame,placeDetailFragment).addToBackStack("place_detail").commit();
+
+//        Toast.makeText(MapsActivity.this,"Marker Title : "+marker.getTitle(),1000).show();
+    }
+
+    @Override
+    public void onBackPressed() {
+        int count = getSupportFragmentManager().getBackStackEntryCount();
+
+        if (count == 0) {
+            super.onBackPressed();
+            //additional code
+        } else {
+            if (mMarker!=null)
+                mMarker.hideInfoWindow();
+            getSupportFragmentManager().popBackStack();
+        }
+
     }
 }
