@@ -52,7 +52,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleApiClient.OnConnectionFailedListener, GoogleMap.OnMarkerClickListener {
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleApiClient.OnConnectionFailedListener, GoogleMap.OnMarkerClickListener, GoogleMap.OnInfoWindowClickListener {
     final static int REQUEST_LOCATION = 199;
     private static final String FINE_LOCATION = Manifest.permission.ACCESS_FINE_LOCATION;
     private static final String COURSE_LOCATION = Manifest.permission.ACCESS_COARSE_LOCATION;
@@ -111,6 +111,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         || event.getAction() == KeyEvent.KEYCODE_ENTER) {
                     //execute our method for searching.
                     geoLocate();
+                    hideSoftKeyboard();
                 }
                 return false;
             }
@@ -144,6 +145,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
         if (list.size() > 0) {
             Address address = list.get(0);
+
+            Log.d(TAG, "Address:data"+address.toString());
             moveCamera(new LatLng(address.getLatitude(), address.getLongitude()), DEFAULT_ZOOM, address.getAddressLine(0));
         }
     }
@@ -222,7 +225,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             MarkerOptions options = new MarkerOptions()
                     .position(latLng)
                     .title(title);
-            mMap.addMarker(options);
+            Marker m= mMap.addMarker(options);
+
+
+            CustomInfoWindowGoogleMap customInfoWindow = new CustomInfoWindowGoogleMap(this);
+            mMap.setInfoWindowAdapter(customInfoWindow);
+            mMap.setOnInfoWindowClickListener(this);
+            m.showInfoWindow();
+
         }
         hideSoftKeyboard();
     }
@@ -351,7 +361,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public boolean onMarkerClick(Marker marker) {
 
-        Toast.makeText(MapsActivity.this,"Marker Title"+marker.getTitle(),1000).show();
+        Toast.makeText(MapsActivity.this,"Marker Title : "+marker.getTitle(),1000).show();
         return false;
+    }
+
+    @Override
+    public void onInfoWindowClick(Marker marker) {
+
+        Toast.makeText(MapsActivity.this,"Marker Title : "+marker.getTitle(),1000).show();
     }
 }
