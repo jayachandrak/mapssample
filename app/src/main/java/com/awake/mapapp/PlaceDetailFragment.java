@@ -53,12 +53,12 @@ public class PlaceDetailFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-       View mView= inflater.inflate(R.layout.fragment_place_detail, container, false);
+        View mView = inflater.inflate(R.layout.fragment_place_detail, container, false);
 
-        mTitleTextView=mView.findViewById(R.id.title);
+        mTitleTextView = mView.findViewById(R.id.title);
         mTitleTextView.setText(title);
 
-    return  mView;
+        return mView;
     }
 
 }

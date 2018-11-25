@@ -52,6 +52,7 @@ import com.google.android.gms.tasks.Task;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleApiClient.OnConnectionFailedListener, GoogleMap.OnMarkerClickListener, GoogleMap.OnInfoWindowClickListener {
     final static int REQUEST_LOCATION = 199;
@@ -148,7 +149,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         if (list.size() > 0) {
             Address address = list.get(0);
 
-            Log.d(TAG, "Address:data"+address.toString());
+            Log.d(TAG, "Address:data" + address.toString());
             moveCamera(new LatLng(address.getLatitude(), address.getLongitude()), DEFAULT_ZOOM, address.getAddressLine(0));
         }
     }
@@ -223,20 +224,54 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         Log.d(TAG, "moveCamera: moving the camera to:lat: " + latLng.latitude + ", lng: " + latLng.longitude);
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoom));
 
-//        if (!title.equals("My Location")) {
-            MarkerOptions options = new MarkerOptions()
-                    .position(latLng)
-                    .title(title);
-            mMarker= mMap.addMarker(options);
+        if (title.equals("My Location")) {
+            title = title + " : " + getCompleteAddressString(latLng.latitude, latLng.longitude);
+
+        }
+        MarkerOptions options = new MarkerOptions()
+                .position(latLng)
+                .title(title);
+        mMarker = mMap.addMarker(options);
 
 
-            CustomInfoWindowGoogleMap customInfoWindow = new CustomInfoWindowGoogleMap(this);
-            mMap.setInfoWindowAdapter(customInfoWindow);
-            mMap.setOnInfoWindowClickListener(this);
-            mMarker.showInfoWindow();
+        CustomInfoWindowGoogleMap customInfoWindow = new CustomInfoWindowGoogleMap(this);
+        mMap.setInfoWindowAdapter(customInfoWindow);
+        mMap.setOnInfoWindowClickListener(this);
+        mMarker.showInfoWindow();
 
 //        }
         hideSoftKeyboard();
+    }
+
+    /**
+     * return the complete address
+     *
+     * @param LATITUDE
+     * @param LONGITUDE
+     * @return
+     */
+    private String getCompleteAddressString(double LATITUDE, double LONGITUDE) {
+        String strAdd = "";
+        Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+        try {
+            List<Address> addresses = geocoder.getFromLocation(LATITUDE, LONGITUDE, 1);
+            if (addresses != null) {
+                Address returnedAddress = addresses.get(0);
+                StringBuilder strReturnedAddress = new StringBuilder("");
+
+                for (int i = 0; i <= returnedAddress.getMaxAddressLineIndex(); i++) {
+                    strReturnedAddress.append(returnedAddress.getAddressLine(i)).append("\n");
+                }
+                strAdd = strReturnedAddress.toString();
+                Log.w("My Current loction ", strReturnedAddress.toString());
+            } else {
+                Log.w("My Current loction ", "No Address returned!");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.w("My Current loction address", "Canont get Address!");
+        }
+        return strAdd;
     }
 
     /**
@@ -363,18 +398,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public boolean onMarkerClick(Marker marker) {
 
-        Toast.makeText(MapsActivity.this,"Marker Title : "+marker.getTitle(),1000).show();
+        Toast.makeText(MapsActivity.this, "Marker Title : " + marker.getTitle(), 1000).show();
         return false;
     }
 
     @Override
     public void onInfoWindowClick(Marker marker) {
 
-        FragmentTransaction fragmentTransaction=getSupportFragmentManager().beginTransaction();
+        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
 
-        PlaceDetailFragment placeDetailFragment=PlaceDetailFragment.newInstance(marker.getTitle());
+        PlaceDetailFragment placeDetailFragment = PlaceDetailFragment.newInstance(marker.getTitle());
 
-        fragmentTransaction.replace(R.id.fragment_frame,placeDetailFragment).addToBackStack("place_detail").commit();
+        fragmentTransaction.replace(R.id.fragment_frame, placeDetailFragment).addToBackStack("place_detail").commit();
 
 //        Toast.makeText(MapsActivity.this,"Marker Title : "+marker.getTitle(),1000).show();
     }
@@ -387,7 +422,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             super.onBackPressed();
             //additional code
         } else {
-            if (mMarker!=null)
+            if (mMarker != null)
                 mMarker.hideInfoWindow();
             getSupportFragmentManager().popBackStack();
         }
