@@ -42,6 +42,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
@@ -226,13 +227,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         if (title.equals("My Location")) {
             title = title + " : " + getCompleteAddressString(latLng.latitude, latLng.longitude);
-
+            MarkerOptions options = new MarkerOptions()
+                    .position(latLng)
+                    .icon(BitmapDescriptorFactory.defaultMarker( BitmapDescriptorFactory.HUE_BLUE))
+                    .title(title);
+            mMarker = mMap.addMarker(options);
+        }else {
+            MarkerOptions options = new MarkerOptions()
+                    .position(latLng)
+                    .title(title);
+            mMarker = mMap.addMarker(options);
         }
-        MarkerOptions options = new MarkerOptions()
-                .position(latLng)
-                .title(title);
-        mMarker = mMap.addMarker(options);
-
 
         CustomInfoWindowGoogleMap customInfoWindow = new CustomInfoWindowGoogleMap(this);
         mMap.setInfoWindowAdapter(customInfoWindow);
