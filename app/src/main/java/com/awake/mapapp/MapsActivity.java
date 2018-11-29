@@ -16,6 +16,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.widget.TooltipCompat;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -74,22 +75,55 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private PlaceAutocompleteAdapter placeAutocompleteAdapter;
     //widgets used
     private AutoCompleteTextView mSearchbox;
-    private ImageView searchImageview, mGPS;
-
+    private ImageView markerIcon, mGPS;
+    private GoogleMap.OnCameraIdleListener onCameraIdleListener;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
         mSearchbox = (AutoCompleteTextView) findViewById(R.id.input_search);
-        searchImageview = (ImageView) findViewById(R.id.imgview);
+        markerIcon = (ImageView) findViewById(R.id.marker_icon_view);
+
         mGPS = (ImageView) findViewById(R.id.ic_gps);
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
+        markerIcon.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                TooltipCompat.setTooltipText(markerIcon,"Test");
+            }
+        });
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         getLocationPermission();
 
     }
+    private void configureCameraIdle() {
+        onCameraIdleListener = new GoogleMap.OnCameraIdleListener() {
+            @Override
+            public void onCameraIdle() {
 
+                LatLng latLng = mMap.getCameraPosition().target;
+                Geocoder geocoder = new Geocoder(MapsActivity.this);
+
+                try {
+                    List<Address> addressList = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1);
+
+                    Log.d(TAG, "Address:data" + addressList.toString());
+                    if (addressList != null && addressList.size() > 0) {
+                        String locality = addressList.get(0).getAddressLine(0);
+                        String country = addressList.get(0).getCountryName();
+                        if (!locality.isEmpty() && !country.isEmpty())
+                            mSearchbox.setText("");
+                            mSearchbox.setText(locality + "  " + country);
+                    }
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        };
+    }
     private void init() {
 
         Log.d(TAG, "init: initializing");
@@ -159,6 +193,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+        configureCameraIdle();
     }
 
     private void getLocationPermission() {
@@ -203,7 +238,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             if (currentLocation != null) {
                                 Log.d(TAG, "currentLocation: latlan!" + currentLocation.toString());
                                 moveCamera(new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude()),
-                                        DEFAULT_ZOOM, "My Location");
+                                        18, "My Location");
                             } else {
                                 Log.d(TAG, "onComplete: current location is null");
                                 Toast.makeText(MapsActivity.this, "unable to get current location", Toast.LENGTH_SHORT).show();
@@ -225,24 +260,25 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         Log.d(TAG, "moveCamera: moving the camera to:lat: " + latLng.latitude + ", lng: " + latLng.longitude);
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoom));
 
-        if (title.equals("My Location")) {
-            title = title + " : " + getCompleteAddressString(latLng.latitude, latLng.longitude);
-            MarkerOptions options = new MarkerOptions()
-                    .position(latLng)
-                    .icon(BitmapDescriptorFactory.defaultMarker( BitmapDescriptorFactory.HUE_BLUE))
-                    .title(title);
-            mMarker = mMap.addMarker(options);
-        }else {
-            MarkerOptions options = new MarkerOptions()
-                    .position(latLng)
-                    .title(title);
-            mMarker = mMap.addMarker(options);
-        }
-
-        CustomInfoWindowGoogleMap customInfoWindow = new CustomInfoWindowGoogleMap(this);
-        mMap.setInfoWindowAdapter(customInfoWindow);
-        mMap.setOnInfoWindowClickListener(this);
-        mMarker.showInfoWindow();
+//commented marker creation
+//        if (title.equals("My Location")) {
+//            title = title + " : " + getCompleteAddressString(latLng.latitude, latLng.longitude);
+//            MarkerOptions options = new MarkerOptions()
+//                    .position(latLng)
+//                    .icon(BitmapDescriptorFactory.defaultMarker( BitmapDescriptorFactory.HUE_RED))
+//                    .title(title);
+//            mMarker = mMap.addMarker(options);
+//        }else {
+//            MarkerOptions options = new MarkerOptions()
+//                    .position(latLng)
+//                    .title(title);
+//            mMarker = mMap.addMarker(options);
+//        }
+//
+//        CustomInfoWindowGoogleMap customInfoWindow = new CustomInfoWindowGoogleMap(this);
+//        mMap.setInfoWindowAdapter(customInfoWindow);
+//        mMap.setOnInfoWindowClickListener(this);
+//        mMarker.showInfoWindow();
 
 //        }
         hideSoftKeyboard();
@@ -293,6 +329,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         Toast.makeText(this, "Map is Ready", Toast.LENGTH_SHORT).show();
         Log.d(TAG, "onMapReady: map is ready");
         mMap = googleMap;
+        mMap.setOnCameraIdleListener(onCameraIdleListener);
         mMap.setOnMarkerClickListener(this);
         if (mLocationPermissionsGranted) {
             getDeviceLocation();
