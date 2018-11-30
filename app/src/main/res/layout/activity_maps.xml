@@ -34,6 +34,7 @@
             android:id="@+id/imgview"
             android:layout_width="20dp"
             android:layout_height="20dp"
+            android:layout_centerVertical="true"
             android:layout_marginLeft="10dp"
             android:src="@drawable/search" />
 
@@ -59,7 +60,14 @@
         android:layout_marginRight="10dp"
         android:scaleType="centerCrop"
         android:src="@drawable/ic_gps" />
-
+<Button
+    android:layout_width="wrap_content"
+    android:text="Set Address"
+    android:layout_centerInParent="true"
+    android:layout_marginBottom="50dp"
+    android:id="@+id/set_address"
+    android:layout_alignParentBottom="true"
+    android:layout_height="wrap_content" />
     <FrameLayout
         android:id="@+id/fragment_frame"
         android:layout_width="match_parent"

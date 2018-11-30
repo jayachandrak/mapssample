@@ -16,7 +16,6 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.widget.TooltipCompat;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -43,11 +42,9 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 
@@ -55,6 +52,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+
+import it.sephiroth.android.library.tooltip.Tooltip;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleApiClient.OnConnectionFailedListener, GoogleMap.OnMarkerClickListener, GoogleMap.OnInfoWindowClickListener {
     final static int REQUEST_LOCATION = 199;
@@ -66,6 +65,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             new LatLng(-40, -168), new LatLng(71, 136));
     private static final String TAG = "MapsActivity";
     LocationManager locationManager;
+    String location = "";
     private GoogleApiClient mGoogleApiClient;
     //vars
     private Boolean mLocationPermissionsGranted = false;
@@ -77,6 +77,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private AutoCompleteTextView mSearchbox;
     private ImageView markerIcon, mGPS;
     private GoogleMap.OnCameraIdleListener onCameraIdleListener;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -90,13 +91,46 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         markerIcon.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                TooltipCompat.setTooltipText(markerIcon,"Test");
+                Tooltip.make(MapsActivity.this,
+                        new Tooltip.Builder(101)
+                                .anchor(markerIcon, Tooltip.Gravity.TOP)
+                                .closePolicy(new Tooltip.ClosePolicy()
+                                        .insidePolicy(true, false)
+                                        .outsidePolicy(true, true), 0)
+                                .withCallback(new Tooltip.Callback() {
+                                    @Override
+                                    public void onTooltipClose(Tooltip.TooltipView tooltipView, boolean b, boolean b1) {
+
+                                    }
+
+                                    @Override
+                                    public void onTooltipFailed(Tooltip.TooltipView tooltipView) {
+
+                                    }
+
+                                    @Override
+                                    public void onTooltipShown(Tooltip.TooltipView tooltipView) {
+
+                                    }
+
+                                    @Override
+                                    public void onTooltipHidden(Tooltip.TooltipView tooltipView) {
+
+                                    }
+                                })
+                                .text(location)
+                                .maxWidth(600)
+
+                                .withArrow(true)
+                                .withOverlay(false).build()
+                ).show();
             }
         });
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         getLocationPermission();
 
     }
+
     private void configureCameraIdle() {
         onCameraIdleListener = new GoogleMap.OnCameraIdleListener() {
             @Override
@@ -104,7 +138,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                 LatLng latLng = mMap.getCameraPosition().target;
                 Geocoder geocoder = new Geocoder(MapsActivity.this);
-
                 try {
                     List<Address> addressList = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1);
 
@@ -112,9 +145,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     if (addressList != null && addressList.size() > 0) {
                         String locality = addressList.get(0).getAddressLine(0);
                         String country = addressList.get(0).getCountryName();
+                        location = locality;
                         if (!locality.isEmpty() && !country.isEmpty())
                             mSearchbox.setText("");
-                            mSearchbox.setText(locality + "  " + country);
+                        mSearchbox.setText(addressList.get(0).getFeatureName());
                     }
 
                 } catch (IOException e) {
@@ -124,6 +158,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         };
     }
+
     private void init() {
 
         Log.d(TAG, "init: initializing");
