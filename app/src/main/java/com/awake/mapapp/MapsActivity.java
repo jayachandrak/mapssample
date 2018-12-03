@@ -17,12 +17,16 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.widget.AutoCompleteTextView;
 import android.widget.ImageView;
+import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -53,7 +57,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import it.sephiroth.android.library.tooltip.Tooltip;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleApiClient.OnConnectionFailedListener, GoogleMap.OnMarkerClickListener, GoogleMap.OnInfoWindowClickListener {
     final static int REQUEST_LOCATION = 199;
@@ -77,7 +80,26 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private AutoCompleteTextView mSearchbox;
     private ImageView markerIcon, mGPS;
     private GoogleMap.OnCameraIdleListener onCameraIdleListener;
+    private PopupWindow popupWindow=new PopupWindow();
 
+    /**
+     * show popup window
+     * @param title
+     */
+    private void showPopupWindow(String title) {
+        View popupView = LayoutInflater.from(this).inflate(R.layout.info_window, null);
+
+        TextView mTitle=popupView.findViewById(R.id.name);
+        popupWindow.setContentView( popupView);
+        popupWindow.setWidth( ViewGroup.LayoutParams.WRAP_CONTENT);
+        popupWindow.setHeight(ViewGroup.LayoutParams.WRAP_CONTENT);
+        mTitle.setText(title);
+        // disappear popupWindow if touch outside of it
+        popupWindow.setOutsideTouchable(true);
+
+        // show popWindow on top of anchor view
+        popupWindow.showAtLocation(markerIcon,Gravity.TOP,markerIcon.getScrollX(),markerIcon.getTop()-markerIcon.getMeasuredHeight());
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -91,39 +113,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         markerIcon.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Tooltip.make(MapsActivity.this,
-                        new Tooltip.Builder(101)
-                                .anchor(markerIcon, Tooltip.Gravity.TOP)
-                                .closePolicy(new Tooltip.ClosePolicy()
-                                        .insidePolicy(true, false)
-                                        .outsidePolicy(true, true), 0)
-                                .withCallback(new Tooltip.Callback() {
-                                    @Override
-                                    public void onTooltipClose(Tooltip.TooltipView tooltipView, boolean b, boolean b1) {
+               showPopupWindow(location);
 
-                                    }
 
-                                    @Override
-                                    public void onTooltipFailed(Tooltip.TooltipView tooltipView) {
-
-                                    }
-
-                                    @Override
-                                    public void onTooltipShown(Tooltip.TooltipView tooltipView) {
-
-                                    }
-
-                                    @Override
-                                    public void onTooltipHidden(Tooltip.TooltipView tooltipView) {
-
-                                    }
-                                })
-                                .text(location)
-                                .maxWidth(600)
-
-                                .withArrow(true)
-                                .withOverlay(false).build()
-                ).show();
             }
         });
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
